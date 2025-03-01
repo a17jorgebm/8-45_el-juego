@@ -3,23 +3,36 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    public float moveSpeed;
+    private float moveSpeed;
+    public float walkSpeed;
+    public float sprintSpeed;
 
     public float groundDrag; //para o roce contra o suelo (non o vou aplicar no aire)
 
+    [Header("Jumping")]
     public float jumpForce;
     public float jumpCoolDown;
     public float airMultiplier;
     private bool readyToJump;
 
+    [Header("Crouching")]
+    public float crouchSpeed;
+    public float crouchYScale;
+    private float startYScale;
+    public float crouchDownForce;
+    private bool isCrouching;
+
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
+    public KeyCode sprintKey = KeyCode.LeftShift;
+    public KeyCode crouchKey;
 
     [Header("Ground Check")]
     public float playerHeight;
     public LayerMask whatIsGround;
     bool grounded;
 
+    [Header("Orientacion")]
     public Transform orientation;
 
     float horizontalInput;
@@ -29,12 +42,23 @@ public class PlayerMovement : MonoBehaviour
 
     Rigidbody rb;
 
+    public MovementState movementState;
+    public enum MovementState{ //estados do movimiento
+        walking,
+        sprinting,
+        crouching,
+        air
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
         readyToJump = true;
+
+        startYScale = transform.localScale.y;
+        print(transform.lossyScale.y);
     }
 
     // Update is called once per frame
@@ -46,6 +70,7 @@ public class PlayerMovement : MonoBehaviour
 
         MyInput();
         SpeedControl();
+        StateHandler();
 
         //manejo o roce se esta no suelo
         if(grounded){
@@ -70,6 +95,22 @@ public class PlayerMovement : MonoBehaviour
             Jump();
             Invoke(nameof(ResetJump), jumpCoolDown); //volvo a poder saltar solo dps do cooldown
         }
+
+        //agacharme
+        if(Input.GetKey(crouchKey)){
+            transform.localScale = new Vector3(transform.localScale.x, crouchYScale, transform.localScale.z);
+            if(!isCrouching){
+                rb.AddForce(Vector3.down * crouchDownForce, ForceMode.Impulse);
+                isCrouching = !isCrouching;
+                print("primeira vez q agacho");
+            }
+        }else{
+            if(isCrouching){
+                transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
+                isCrouching = !isCrouching;
+                print("paro de agacharme");
+            }
+        }
     }
 
     private void MovePlayer(){
@@ -81,6 +122,28 @@ public class PlayerMovement : MonoBehaviour
             rb.AddForce(moveDirection * moveSpeed * 10f, ForceMode.Force);
         else
             rb.AddForce(moveDirection * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+    }
+
+    private void StateHandler(){
+        //crouching
+        if(grounded && Input.GetKey(crouchKey)){ //que se poda agachar no aire tamen pa que poda ir pa abaixo
+            movementState = MovementState.crouching;
+            moveSpeed = crouchSpeed;
+        }
+        //sprinting
+        else if(grounded && Input.GetKey(sprintKey)){
+            movementState = MovementState.sprinting;
+            moveSpeed = sprintSpeed;
+        }
+        //walking
+        else if(grounded){
+            movementState = MovementState.walking;
+            moveSpeed = walkSpeed;
+        }
+        //air
+        else{
+            movementState = MovementState.air;
+        }
     }
 
     private void SpeedControl(){
