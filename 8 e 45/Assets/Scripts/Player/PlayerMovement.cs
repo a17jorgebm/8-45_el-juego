@@ -44,7 +44,7 @@ public class PlayerMovement : MonoBehaviour
     private RaycastHit slopeHit;
     private bool exitingSlope; //para poder saltar nas pendientes
 
-    [Header("Orientacion")]
+    [Header("Orientation")]
     public Transform orientation;
 
     float horizontalInput;
@@ -121,16 +121,6 @@ public class PlayerMovement : MonoBehaviour
                 isCrouching = !isCrouching;
             }
         }
-
-        //comprobo se a velocidad cambiou mui bruscamente
-        if(Mathf.Abs(desiredMovementSpeed - lastDesiredMovementSpeed) > 4f && moveSpeed != 0){
-            StopAllCoroutines();
-            StartCoroutine(SmoothlyLerpMoveSpeed());
-        }else{
-            moveSpeed = desiredMovementSpeed;
-        }
-
-        lastDesiredMovementSpeed = desiredMovementSpeed;
     }
 
     private IEnumerator SmoothlyLerpMoveSpeed(){
@@ -198,6 +188,18 @@ public class PlayerMovement : MonoBehaviour
         else{
             movementState = MovementState.air;
         }
+
+        //comprobo se a velocidad cambiou mui bruscamente
+        if(Mathf.Abs(desiredMovementSpeed - lastDesiredMovementSpeed) > 4f && moveSpeed != 0){
+            StopAllCoroutines();
+            StartCoroutine(SmoothlyLerpMoveSpeed());
+        }else{
+            moveSpeed = desiredMovementSpeed;
+        }
+
+        print(moveSpeed);
+
+        lastDesiredMovementSpeed = desiredMovementSpeed;
     }
 
     private void SpeedControl(){
