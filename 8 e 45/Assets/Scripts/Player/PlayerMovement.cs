@@ -12,6 +12,10 @@ public class PlayerMovement : MonoBehaviour
     public float slideSpeed;
     private float desiredMovementSpeed;
     private float lastDesiredMovementSpeed; //para poder ir frenando pouco a pouco
+
+    public float speedIncreaseMultiplier;
+    public float slopeIncreaseMultiplier;
+
     public bool sliding;
 
     public float groundDrag; //para o roce contra o suelo (non o vou aplicar no aire)
@@ -123,21 +127,6 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private IEnumerator SmoothlyLerpMoveSpeed(){
-        //vou usar lerp para facer que a transicion entre duas velocidades non sea tan brusca
-        float time = 0;
-        float difference = Mathf.Abs(desiredMovementSpeed - moveSpeed);
-        float startValue = moveSpeed;
-
-        while(time < difference){
-            moveSpeed = Mathf.Lerp(startValue, desiredMovementSpeed, time / difference);
-            time += Time.deltaTime;
-            yield return null;
-        }
-
-        moveSpeed = desiredMovementSpeed;
-    }
-
     private void MovePlayer(){
         //calculo a direccion do movimiento pa que siempre vaia pa onde miro
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
@@ -196,10 +185,34 @@ public class PlayerMovement : MonoBehaviour
         }else{
             moveSpeed = desiredMovementSpeed;
         }
-
-        print(moveSpeed);
-
         lastDesiredMovementSpeed = desiredMovementSpeed;
+    }
+
+    private IEnumerator SmoothlyLerpMoveSpeed()
+    {
+        // smoothly lerp movementSpeed to desired value
+        float time = 0;
+        float difference = Mathf.Abs(desiredMovementSpeed - moveSpeed);
+        float startValue = moveSpeed;
+
+        while (time < difference)
+        {
+            moveSpeed = Mathf.Lerp(startValue, desiredMovementSpeed, time / difference);
+
+            if (OnSlope())
+            {
+                float slopeAngle = Vector3.Angle(Vector3.up, slopeHit.normal);
+                float slopeAngleIncrease = 1 + (slopeAngle / 90f);
+
+                time += Time.deltaTime * speedIncreaseMultiplier * slopeIncreaseMultiplier * slopeAngleIncrease;
+            }
+            else
+                time += Time.deltaTime * speedIncreaseMultiplier;
+
+            yield return null;
+        }
+
+        moveSpeed = desiredMovementSpeed;
     }
 
     private void SpeedControl(){

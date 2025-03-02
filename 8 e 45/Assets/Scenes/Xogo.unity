@@ -890,11 +890,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f4a5f20d2605fb4ca9afe6a2403da32, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 10
-  sprintSpeed: 17
+  walkSpeed: 7
+  sprintSpeed: 10
   slideSpeed: 30
+  speedIncreaseMultiplier: 1.5
+  slopeIncreaseMultiplier: 2.5
   sliding: 0
-  groundDrag: 5
+  groundDrag: 4
   jumpForce: 12
   jumpCoolDown: 0.25
   airMultiplier: 0.4
@@ -953,7 +955,7 @@ MonoBehaviour:
   orientation: {fileID: 1620024585}
   playerObj: {fileID: 1739534182}
   maxSlideTime: 0.75
-  slideForce: 1000
+  slideForce: 200
   slideYScale: 0.5
   slideKey: 306
 --- !u!1 &1620024584
