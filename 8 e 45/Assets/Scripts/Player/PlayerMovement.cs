@@ -4,11 +4,11 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
+    public float groundDrag; //para o roce contra o suelo (non o vou aplicar no aire)
     private float moveSpeed;
     public float walkSpeed;
     public float sprintSpeed;
-
-    [Header("Sliding")]
+    public float wallRunSpeed;
     public float slideSpeed;
     private float desiredMovementSpeed;
     private float lastDesiredMovementSpeed; //para poder ir frenando pouco a pouco
@@ -16,9 +16,10 @@ public class PlayerMovement : MonoBehaviour
     public float speedIncreaseMultiplier;
     public float slopeIncreaseMultiplier;
 
+    [Header("State")]
     public bool sliding;
-
-    public float groundDrag; //para o roce contra o suelo (non o vou aplicar no aire)
+    public bool isCrouching;
+    public bool wallrunning;
 
     [Header("Jumping")]
     public float jumpForce;
@@ -31,7 +32,6 @@ public class PlayerMovement : MonoBehaviour
     public float crouchYScale;
     private float startYScale;
     public float crouchDownForce;
-    private bool isCrouching;
 
     [Header("Keybinds")]
     public KeyCode jumpKey = KeyCode.Space;
@@ -64,6 +64,7 @@ public class PlayerMovement : MonoBehaviour
         sprinting,
         crouching,
         sliding,
+        wallrunning,
         air
     }
 
@@ -143,13 +144,18 @@ public class PlayerMovement : MonoBehaviour
         else
             rb.AddForce(10f * airMultiplier * moveSpeed * moveDirection, ForceMode.Force);
 
-        //se estou en pendiente, desactivo a gravedad pa que non caia
-        rb.useGravity = !OnSlope();
+        //se estou en pendiente, desactivo a gravedad pa que non caia, sempre que non estea wallrunning
+        if(!wallrunning) rb.useGravity = !OnSlope();
     }
 
     private void StateHandler(){
+        //wallrunning
+        if(wallrunning){
+            movementState = MovementState.wallrunning;
+            desiredMovementSpeed = wallRunSpeed;
+        }
         //sliding
-        if(sliding){
+        else if(sliding){
             movementState = MovementState.sliding;
 
             if(OnSlope() && rb.linearVelocity.y < 0.1f){
