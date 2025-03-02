@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -6,6 +7,12 @@ public class PlayerMovement : MonoBehaviour
     private float moveSpeed;
     public float walkSpeed;
     public float sprintSpeed;
+
+    [Header("Sliding")]
+    public float slideSpeed;
+    private float desiredMovementSpeed;
+    private float lastDesiredMovementSpeed; //para poder ir frenando pouco a pouco
+    public bool sliding;
 
     public float groundDrag; //para o roce contra o suelo (non o vou aplicar no aire)
 
@@ -52,6 +59,7 @@ public class PlayerMovement : MonoBehaviour
         walking,
         sprinting,
         crouching,
+        sliding,
         air
     }
 
@@ -113,6 +121,31 @@ public class PlayerMovement : MonoBehaviour
                 isCrouching = !isCrouching;
             }
         }
+
+        //comprobo se a velocidad cambiou mui bruscamente
+        if(Mathf.Abs(desiredMovementSpeed - lastDesiredMovementSpeed) > 4f && moveSpeed != 0){
+            StopAllCoroutines();
+            StartCoroutine(SmoothlyLerpMoveSpeed());
+        }else{
+            moveSpeed = desiredMovementSpeed;
+        }
+
+        lastDesiredMovementSpeed = desiredMovementSpeed;
+    }
+
+    private IEnumerator SmoothlyLerpMoveSpeed(){
+        //vou usar lerp para facer que a transicion entre duas velocidades non sea tan brusca
+        float time = 0;
+        float difference = Mathf.Abs(desiredMovementSpeed - moveSpeed);
+        float startValue = moveSpeed;
+
+        while(time < difference){
+            moveSpeed = Mathf.Lerp(startValue, desiredMovementSpeed, time / difference);
+            time += Time.deltaTime;
+            yield return null;
+        }
+
+        moveSpeed = desiredMovementSpeed;
     }
 
     private void MovePlayer(){
@@ -120,7 +153,7 @@ public class PlayerMovement : MonoBehaviour
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
         if(OnSlope() && !exitingSlope){
-            rb.AddForce(10f * moveSpeed * GetSlopeMoveDirection(), ForceMode.Force);
+            rb.AddForce(10f * moveSpeed * GetSlopeMoveDirection(moveDirection), ForceMode.Force);
             if(rb.linearVelocity.y > 0){
                 rb.AddForce(40f * Vector3.down, ForceMode.Force);
             }
@@ -136,20 +169,30 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void StateHandler(){
+        //sliding
+        if(sliding){
+            movementState = MovementState.sliding;
+
+            if(OnSlope() && rb.linearVelocity.y < 0.1f){
+                desiredMovementSpeed = slideSpeed;
+            }else{
+                desiredMovementSpeed = sprintSpeed;
+            }
+        }
         //crouching
-        if(grounded && Input.GetKey(crouchKey)){ //que se poda agachar no aire tamen pa que poda ir pa abaixo
+        else if(grounded && Input.GetKey(crouchKey)){ //que se poda agachar no aire tamen pa que poda ir pa abaixo
             movementState = MovementState.crouching;
-            moveSpeed = crouchSpeed;
+            desiredMovementSpeed = crouchSpeed;
         }
         //sprinting
         else if(grounded && Input.GetKey(sprintKey)){
             movementState = MovementState.sprinting;
-            moveSpeed = sprintSpeed;
+            desiredMovementSpeed = sprintSpeed;
         }
         //walking
         else if(grounded){
             movementState = MovementState.walking;
-            moveSpeed = walkSpeed;
+            desiredMovementSpeed = walkSpeed;
         }
         //air
         else{
@@ -186,7 +229,7 @@ public class PlayerMovement : MonoBehaviour
         exitingSlope = false;
     }
 
-    private bool OnSlope(){
+    public bool OnSlope(){
         if(Physics.Raycast(transform.position, Vector3.down,out slopeHit, playerHeight * 0.5f + 0.3f)){
             //.normal devolve a direccion a que apunta o elemento
             //calculo o angulo entre up(suelo plano) e o elemento no que esta o xogador (slopeHit.normal)
@@ -197,7 +240,7 @@ public class PlayerMovement : MonoBehaviour
     }
 
     //devolvo a direccion na que teño que ir según a pendiente na que estou
-    private Vector3 GetSlopeMoveDirection(){
+    public Vector3 GetSlopeMoveDirection(Vector3 direction){
         return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
     }
 }

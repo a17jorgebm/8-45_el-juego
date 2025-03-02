@@ -21,8 +21,6 @@ public class Sliding : MonoBehaviour
     private float horizontalInput;
     private float verticalInput;
 
-    private bool sliding;
-
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -41,14 +39,14 @@ public class Sliding : MonoBehaviour
             StartSlide();
         }
 
-        if(Input.GetKeyUp(slideKey) && sliding){
+        if(Input.GetKeyUp(slideKey) && pm.sliding){
             StopSlide();
         }
     }
 
     void FixedUpdate()
     {
-        if(sliding){
+        if(pm.sliding){
             SlidingMovement();
         }
     }
@@ -56,8 +54,15 @@ public class Sliding : MonoBehaviour
     private void SlidingMovement(){
         Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
-        rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
-        slideTimer -= Time.deltaTime;
+        //sliding normal
+        if(!pm.OnSlope() || rb.linearVelocity.y > -0.1f){
+            rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
+            slideTimer -= Time.deltaTime;
+        }
+        //baixando por unha rampa, aqui ademais non lle baixo ao temporizador pa que poda ser infinito
+        else{
+            rb.AddForce(pm.GetSlopeMoveDirection(inputDirection) * slideForce, ForceMode.Force);
+        }
 
         if(slideTimer <= 0){
             StopSlide();
@@ -65,7 +70,7 @@ public class Sliding : MonoBehaviour
     }
 
     private void StartSlide(){
-        sliding = true;
+        pm.sliding = true;
 
         playerObj.localScale = new Vector3(playerObj.localScale.x, playerObj.localScale.y * slideYScale, playerObj.localScale.z);
         rb.AddForce(Vector3.down * 5f, ForceMode.Impulse);
@@ -74,7 +79,7 @@ public class Sliding : MonoBehaviour
     }
 
     private void StopSlide(){
-        sliding = false;
+        pm.sliding = false;
         playerObj.localScale = new Vector3(playerObj.localScale.x, startYScale, playerObj.localScale.z);
     }
 }
