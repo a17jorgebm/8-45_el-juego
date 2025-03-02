@@ -41,6 +41,7 @@ public class WallRunning : MonoBehaviour
 
     [Header("References")]
     public Transform orientation;
+    public PlayerCam cam;
     private PlayerMovement pm;
     private Rigidbody rb;
 
@@ -116,6 +117,11 @@ public class WallRunning : MonoBehaviour
 
         //poño a velocidad vertical a 0, pero solo campo empezo
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+
+        //aplico os efectos da camara
+        cam.DoFov(90f);
+        if(wallLeft) cam.DoTilt(-5f);
+        else if(wallRight) cam.DoTilt(5f);
     }
 
     private void WallRunningMovement(){
@@ -154,6 +160,11 @@ public class WallRunning : MonoBehaviour
 
     private void StopWallRun(){
         pm.wallrunning = false;
+
+        //poño os efectos da camara normales outra vez
+        //aplico os efectos da camara
+        cam.DoFov(90f);
+        cam.DoTilt(0f);
     }
 
     private void WallJump(){

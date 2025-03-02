@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using DG.Tweening;
 
 public class PlayerCam : MonoBehaviour
 {
@@ -7,6 +8,8 @@ public class PlayerCam : MonoBehaviour
     public float sensY;
 
     public Transform orientation;
+    //faime falta para facer o de tumbar a camara mentras fago wallrunning, porque senon estaría sobreescribindo o giro da camara 2 veces e non iría
+    public Transform camHolder; 
 
     float xRotation;
     float yRotation;
@@ -30,18 +33,18 @@ public class PlayerCam : MonoBehaviour
 
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
-        //roto a camara
-        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
+        //roto o camholder en vez da camara, para en DoTile poder rotar a camara
+        camHolder.rotation = Quaternion.Euler(xRotation, yRotation, 0);
         //roto o xogador
         orientation.rotation = Quaternion.Euler(0, yRotation, 0);
 
     }
 
     public void DoFov(float endValue){
-
+        GetComponent<Camera>().DOFieldOfView(endValue, 0.25f);
     }
 
-    public void DoTile(float zTile){
-
+    public void DoTilt(float zTilt){
+        transform.DOLocalRotate(new Vector3(0,0,zTilt),0.25f);
     }
 }
