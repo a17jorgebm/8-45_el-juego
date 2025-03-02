@@ -852,6 +852,7 @@ GameObject:
   - component: {fileID: 1615112818}
   - component: {fileID: 1615112820}
   - component: {fileID: 1615112819}
+  - component: {fileID: 1615112821}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -900,7 +901,7 @@ MonoBehaviour:
   crouchDownForce: 0
   jumpKey: 32
   sprintKey: 304
-  crouchKey: 306
+  crouchKey: 99
   playerHeight: 2
   whatIsGround:
     serializedVersion: 2
@@ -935,6 +936,24 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 1
+--- !u!114 &1615112821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1615112817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3605691332f47a4dbceb1f94a56256a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  orientation: {fileID: 1620024585}
+  playerObj: {fileID: 1739534182}
+  maxSlideTime: 0.75
+  slideForce: 200
+  slideYScale: 0.5
+  slideKey: 306
 --- !u!1 &1620024584
 GameObject:
   m_ObjectHideFlags: 0
