@@ -20,6 +20,8 @@ public class PlayerMovement : MonoBehaviour
     public bool sliding;
     public bool isCrouching;
     public bool wallrunning;
+    public bool freeze;
+    public bool activeGrapple;
 
     [Header("Jumping")]
     public float jumpForce;
@@ -65,6 +67,7 @@ public class PlayerMovement : MonoBehaviour
         crouching,
         sliding,
         wallrunning,
+        freeze, //para cando uso o gancho e me quedo parado un nada
         air
     }
 
@@ -89,8 +92,8 @@ public class PlayerMovement : MonoBehaviour
         SpeedControl();
         StateHandler();
 
-        //manejo o roce se esta no suelo
-        if(grounded){
+        //manejo o roce se esta no suelo, se esta usando o gancho desactivoo
+        if(grounded && !activeGrapple){
             rb.linearDamping = groundDrag;
         }else{
             rb.linearDamping = 0;
@@ -129,6 +132,9 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void MovePlayer(){
+        //se esta usando o gancho pa moverse desactivo esto
+        if(activeGrapple) return;
+
         //calculo a direccion do movimiento pa que siempre vaia pa onde miro
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
@@ -149,8 +155,14 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void StateHandler(){
+        //freeze
+        if(freeze){
+            movementState = MovementState.freeze;
+            moveSpeed = 0;
+            rb.linearVelocity = Vector3.zero;
+        }
         //wallrunning
-        if(wallrunning){
+        else if(wallrunning){
             movementState = MovementState.wallrunning;
             desiredMovementSpeed = wallRunSpeed;
         }
@@ -222,6 +234,9 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void SpeedControl(){
+        //se esta usando o gancho pa moverse desactivo esto
+        if(activeGrapple) return;
+
         if(OnSlope() && !exitingSlope){
             if(rb.linearVelocity.magnitude > moveSpeed){
                 rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
@@ -260,8 +275,53 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
+
+    private bool enableMovementOnNextTouch;
+    public void JumpToPosition(Vector3 targetPosition, float trajectoryHeight){
+        activeGrapple = true;
+
+        velocityToSet = CalculateJumpVelocity(transform.position, targetPosition, trajectoryHeight);
+        Invoke(nameof(SetVelocity),0.1f);
+
+        Invoke(nameof(ResetRestrictions),3f); //por si acaso algo vai mal
+    }
+
+    private Vector3 velocityToSet;
+
+    private void SetVelocity(){
+        enableMovementOnNextTouch = true;
+        rb.linearVelocity = velocityToSet;
+    }
+
+    public void ResetRestrictions(){
+        activeGrapple = false;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(enableMovementOnNextTouch){
+            enableMovementOnNextTouch = false;
+            ResetRestrictions();
+            GetComponent<Grappling>().StopGrappling();
+        }
+    }
+
     //devolvo a direccion na que teño que ir según a pendiente na que estou
     public Vector3 GetSlopeMoveDirection(Vector3 direction){
-        return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
+        return Vector3.ProjectOnPlane(direction, slopeHit.normal).normalized;
+    }
+
+    //obviamente estas mates se me escapan, pero é para calcular a forza que teño que aplicar para atraer o xogador hasta o destino do gancho
+    public Vector3 CalculateJumpVelocity(Vector3 startPoint, Vector3 endPoint, float trajectoryHeight)
+    {
+        float gravity = Physics.gravity.y;
+        float displacementY = endPoint.y - startPoint.y;
+        Vector3 displacementXZ = new Vector3(endPoint.x - startPoint.x, 0f, endPoint.z - startPoint.z);
+
+        Vector3 velocityY = Vector3.up * Mathf.Sqrt(-2 * gravity * trajectoryHeight);
+        Vector3 velocityXZ = displacementXZ / (Mathf.Sqrt(-2 * trajectoryHeight / gravity) 
+            + Mathf.Sqrt(2 * (displacementY - trajectoryHeight) / gravity));
+
+        return velocityXZ + velocityY;
     }
 }
