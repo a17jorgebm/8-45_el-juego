@@ -32,6 +32,11 @@ public class PlayerMovement : MonoBehaviour
     public LayerMask whatIsGround;
     bool grounded;
 
+    [Header("Slope Handling")] //para gestionar cando sube por pendientes, porque senon ao facer a force pa adiante non da
+    public float maxSlopeAngle;
+    private RaycastHit slopeHit;
+    private bool exitingSlope; //para poder saltar nas pendientes
+
     [Header("Orientacion")]
     public Transform orientation;
 
@@ -58,7 +63,6 @@ public class PlayerMovement : MonoBehaviour
         readyToJump = true;
 
         startYScale = transform.localScale.y;
-        print(transform.lossyScale.y);
     }
 
     // Update is called once per frame
@@ -66,7 +70,7 @@ public class PlayerMovement : MonoBehaviour
     {
         //comprobo se esta no suelo con un Raycast hacia abaixo, devolve true ou false
         // indico: de onde empeza(centro do player), en que direccion(abaixo), canto mide(a mita da altura do xogador e un pouco mas), e o layer no que vai actuar
-        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f, whatIsGround);
+        grounded = Physics.Raycast(transform.position, Vector3.down, playerHeight * 0.5f + 0.3f, whatIsGround);
 
         MyInput();
         SpeedControl();
@@ -102,13 +106,11 @@ public class PlayerMovement : MonoBehaviour
             if(!isCrouching){
                 rb.AddForce(Vector3.down * crouchDownForce, ForceMode.Impulse);
                 isCrouching = !isCrouching;
-                print("primeira vez q agacho");
             }
         }else{
             if(isCrouching){
                 transform.localScale = new Vector3(transform.localScale.x, startYScale, transform.localScale.z);
                 isCrouching = !isCrouching;
-                print("paro de agacharme");
             }
         }
     }
@@ -117,11 +119,20 @@ public class PlayerMovement : MonoBehaviour
         //calculo a direccion do movimiento pa que siempre vaia pa onde miro
         moveDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
+        if(OnSlope() && !exitingSlope){
+            rb.AddForce(10f * moveSpeed * GetSlopeMoveDirection(), ForceMode.Force);
+            if(rb.linearVelocity.y > 0){
+                rb.AddForce(40f * Vector3.down, ForceMode.Force);
+            }
+        }
         //se estou no aire podome mover mais rapido
-        if(grounded)
-            rb.AddForce(moveDirection * moveSpeed * 10f, ForceMode.Force);
+        else if(grounded)
+            rb.AddForce(10f * moveSpeed * moveDirection, ForceMode.Force);
         else
-            rb.AddForce(moveDirection * moveSpeed * 10f * airMultiplier, ForceMode.Force);
+            rb.AddForce(10f * airMultiplier * moveSpeed * moveDirection, ForceMode.Force);
+
+        //se estou en pendiente, desactivo a gravedad pa que non caia
+        rb.useGravity = !OnSlope();
     }
 
     private void StateHandler(){
@@ -147,16 +158,24 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void SpeedControl(){
-        Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+        if(OnSlope() && !exitingSlope){
+            if(rb.linearVelocity.magnitude > moveSpeed){
+                rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed;
+            }
+        }
+        else{
+            Vector3 flatVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
 
-        //se vou mais rapido que a moveSpeed, calculo a velocidad maxima e aplicolla
-        if(flatVelocity.magnitude > moveSpeed){
-            Vector3 limitVel = flatVelocity.normalized * moveSpeed;
-            rb.linearVelocity = new Vector3(limitVel.x, rb.linearVelocity.y, limitVel.z);
+            //se vou mais rapido que a moveSpeed, calculo a velocidad maxima e aplicolla
+            if(flatVelocity.magnitude > moveSpeed){
+                Vector3 limitVel = flatVelocity.normalized * moveSpeed;
+                rb.linearVelocity = new Vector3(limitVel.x, rb.linearVelocity.y, limitVel.z);
+            }
         }
     }
 
     private void Jump(){
+        exitingSlope =true;
         //reseteo a velocidad en y para siempre saltar o mismo
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
@@ -164,5 +183,21 @@ public class PlayerMovement : MonoBehaviour
     }
     private void ResetJump(){
         readyToJump = true;
+        exitingSlope = false;
+    }
+
+    private bool OnSlope(){
+        if(Physics.Raycast(transform.position, Vector3.down,out slopeHit, playerHeight * 0.5f + 0.3f)){
+            //.normal devolve a direccion a que apunta o elemento
+            //calculo o angulo entre up(suelo plano) e o elemento no que esta o xogador (slopeHit.normal)
+            float angle = Vector3.Angle(Vector3.up, slopeHit.normal);
+            return angle < maxSlopeAngle && angle != 0;
+        }
+        return false;
+    }
+
+    //devolvo a direccion na que teño que ir según a pendiente na que estou
+    private Vector3 GetSlopeMoveDirection(){
+        return Vector3.ProjectOnPlane(moveDirection, slopeHit.normal).normalized;
     }
 }
