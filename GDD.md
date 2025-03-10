@@ -3,28 +3,18 @@
 (Cubrir según necesidades)
 
 ## PRESENTACIÓN/RESUMEN
-
-Ok o xogo quero que trate basicamente de unha conta atrás, na que tes que chegar a o boss final antes de que acabe o tempo. Tes que encontrar armas polo camiño pa poder matar o boss.
-
-1. Empezo nunha especie de madmorra, haiq que encontrar a chave para salir.
-2. Xusto despois de salir da madmorra danme a arma de gancho doble
-3. Zona de arboles e casas destruidas, nas que podo ir usando o gancho
-4. boss final epico
-
-- Título. 
-- Concepto: descripción breve (un párrafo) de las ideas principales del juego
-- Género (puede ser más de uno)
-- Público (target audience)
-- Plataforma (PC, smartphone, tablet,...)
+- Título: 8:45 el juego
+- Concepto: el juego consiste en llegar en el menor tiempo posible al san clemente, pudiendo correr por las paredes y usar ganchos para moverse
+- Género: accion, runner
+- Público: cualquiera
+- Plataforma: PC, web
 
 ## GAMEPLAY
 
 
 
 ### Objetivos
-
-Descripción de cuáles son los objetivos principales (y secundarios si los hay) del juego
-
+El juego consiste en llegar en el menor tiempo posible al san clemente, pudiendo correr por las paredes y usar ganchos para moverse
 #### Jugabilidad
 
 Descripción de la interacción y experiencia del jugador. Sistemas de premios o recompensas. Puzzles,...
@@ -35,29 +25,26 @@ Avance entre las distintas fases (si las hay) del juego.
 
 ### GUI
 
-Descripción del GUI y de la información mostrada al jugador durante el desarrollo de la partida
+El gui muestra el tiempo restante para llegar, cambiando de aspecto cuanto menos tiempo quede
 
 ## MECÁNICAS
 
-- Reglas: condiciones de victoria, condiciones de pérdida, reglas de combate,...
-- Interacción: controles e interacción del jugador con el personaje, acciones posibles, interacción con otros elementos o personajes,...
-- Puntaje: sistema de puntaje
-- Dificultad: parámetros de dificultad progresiva
+- Reglas: llegar antes de las 8:45, si no el juego acabara en derrota
+- Interacción: 
+    - wsad: mover el personaje
+    - shift: correr
+    - ctrl derecho: deslizarse
+    - c: agacharse
+    - click derecho: gancho que empuja
+    - click izquierdo: liana
+    - raton: mover la camara
+- Puntaje: tiempo que se ha tardado en llegar
+- Dificultad: la dificultad esta en superar tu record anterior, aprendiendose los movimientos y el mejor camino
 
 ## ELEMENTOS DEL VIDEOJUEGO
 
 Caracterización del mundo/entorno en el que se desarrolla el videojuego (Worldbuilding). Puede incluir:
 
-- Leyes físicas
-- Historia
-- Personajes: descripción, arte,...
-- Niveles
-- Elementos culturales o geográficos
-- ...
+Se ambienta en un Santiago futurista, con un mapa con paredes extra para ayudar al jugador a pasar de una zona a otra.
 
 ## ASSETS
-
-- Música
-- Efectos de sonido
-- Modelos 2D/3D
-- ...
